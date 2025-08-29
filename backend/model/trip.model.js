@@ -19,7 +19,17 @@ const tripSchema = new mongoose.Schema(
       required: true,
     },
     category: {
-      type: String,
+      type: [String],
+      enum: [
+        "BACKPACKING TRIPS",
+        "SUNRISE TREKS",
+        "ONE DAY TRIPS",
+        "INTERNATIONAL TRIPS",
+        "WOMEN TRIPS",
+        "LONG WEEKEND",
+        "WATER SPORTS",
+        "TWO DAYS TREK",
+      ],
       required: true,
     },
     itinerary: [
@@ -28,6 +38,18 @@ const tripSchema = new mongoose.Schema(
         activities: [String],
       },
     ],
+    fileName: {
+      type: String,
+      required: true,
+    },
+    url: {
+      type: String,
+      required: true,
+    },
+    fileId: {
+      type: String,
+      required: true,
+    },
     bookings: [
       {
         type: mongoose.Schema.Types.ObjectId,

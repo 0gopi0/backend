@@ -1,5 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 import { connectDB } from "./db/connectDB.js";
 import authRoutes from "./routes/auth.routes.js";
 import tripsRoutes from "./routes/trips.routes.js";
@@ -8,7 +10,10 @@ import bookingsRoutes from "./routes/bookings.routes.js";
 import reviewsRoutes from "./routes/reviews.routes.js";
 import cookieParser from "cookie-parser";
 
-dotenv.config();
+// Load environment variables from parent directory
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.join(__dirname, "../.env") });
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.use(cookieParser()); // middleware to parse cookies

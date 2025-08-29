@@ -45,7 +45,7 @@ export const signup = async (req, res) => {
     // jwt
     generateTokenAndSetCookie(res, user._id);
 
-    await sendVerificationEmail(user.email, user.verificationToken);
+    // await sendVerificationEmail(user.email, user.verificationToken);
 
     res.status(201).json({
       success: true,
@@ -80,7 +80,7 @@ export const verifyEmail = async (req, res) => {
     user.verificationTokenExpiresAt = undefined;
     await user.save();
 
-    await sendWelcomeEmail(user.email, user.name);
+    // await sendWelcomeEmail(user.email, user.name);
 
     res.status(200).json({
       success: true,
