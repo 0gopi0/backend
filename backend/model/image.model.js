@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
-const imageSchena = new mongoose.Schema({
-  fileName: {
+const imageSchema = new mongoose.Schema({
+  name: {
     type: String,
     required: true,
   },
@@ -15,4 +15,4 @@ const imageSchena = new mongoose.Schema({
   },
 });
 
-export const Image = mongoose.model("Image", imageSchena);
+export default mongoose.model("Image", imageSchema);

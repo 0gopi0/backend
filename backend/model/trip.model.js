@@ -2,7 +2,8 @@ import mongoose from "mongoose";
 
 const tripSchema = new mongoose.Schema(
   {
-    name: {
+    // Core Trip Information
+    heading: {
       type: String,
       required: true,
     },
@@ -32,24 +33,44 @@ const tripSchema = new mongoose.Schema(
       ],
       required: true,
     },
+    price: {
+      type: String,
+      required: true,
+    },
+
+    // Detailed Trip Plan
     itinerary: [
       {
-        day: Number,
-        activities: [String],
+        day: { type: String, required: true },
+        activities: { type: [String], required: true },
       },
     ],
-    fileName: {
-      type: String,
+    highlights: {
+      type: [String],
       required: true,
     },
-    url: {
-      type: String,
+
+    // Image Assets
+    headerImage: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Image",
+    },
+    heroImage: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Image",
+    },
+
+    // Logistics & Preparation
+    pickupLocation: {
+      type: [String],
       required: true,
     },
-    fileId: {
-      type: String,
+    thingsToCarry: {
+      type: [String],
       required: true,
     },
+
+    // Relational Data
     bookings: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -57,7 +78,12 @@ const tripSchema = new mongoose.Schema(
       },
     ],
   },
-  { timestamps: true }
+  {
+    // Automatically add createdAt and updatedAt timestamps
+    timestamps: true,
+  }
 );
 
-export const Trip = mongoose.model("Trip", tripSchema);
+const Trip = mongoose.model("Trip", tripSchema);
+
+export default Trip;

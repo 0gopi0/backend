@@ -1,30 +1,30 @@
 import express from "express";
+import {
+  addBlog,
+  getAllBlogs,
+  getBlogById,
+  updateBlog,
+  deleteBlog,
+  uploadMultiple,
+} from "../controllers/blog.controller.js";
+import { verifyToken } from "../midlleware/verifyToken.js";
+import { checkAdmin } from "../midlleware/checkAdmin.js";
 
 const router = express.Router();
 
-// GET all blogs
-router.get("/", (req, res) => {
-  res.json({ message: "Get all blogs" });
-});
+// GET all blogs (public route)
+router.get("/", getAllBlogs);
 
-// GET blog by ID
-router.get("/:id", (req, res) => {
-  res.json({ message: `Get blog with ID: ${req.params.id}` });
-});
+// GET blog by ID (public route)
+router.get("/:id", getBlogById);
 
-// POST create new blog
-router.post("/", (req, res) => {
-  res.json({ message: "Create new blog" });
-});
+// POST create new blog (admin only)
+router.post("/", verifyToken, checkAdmin, uploadMultiple, addBlog);
 
-// PUT update blog
-router.put("/:id", (req, res) => {
-  res.json({ message: `Update blog with ID: ${req.params.id}` });
-});
+// PUT update blog (admin only)
+router.put("/:id", verifyToken, checkAdmin, uploadMultiple, updateBlog);
 
-// DELETE blog
-router.delete("/:id", (req, res) => {
-  res.json({ message: `Delete blog with ID: ${req.params.id}` });
-});
+// DELETE blog (admin only)
+router.delete("/:id", verifyToken, checkAdmin, deleteBlog);
 
 export default router;
