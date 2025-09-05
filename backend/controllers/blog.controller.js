@@ -23,10 +23,7 @@ export const upload = multer({
 
 export const uploadMultiple = multer({
   storage: multer.memoryStorage(),
-}).fields([
-  { name: "headerImage", maxCount: 1 },
-  { name: "heroImage", maxCount: 1 },
-]);
+}).any(); // Use .any() to accept any field names and handle them in the controller
 
 export const addBlog = async (req, res) => {
   try {
@@ -117,15 +114,20 @@ export const addBlog = async (req, res) => {
     }
 
     // Extract headerImage and heroImage from files array
-    if (!req.files || !req.files.headerImage || !req.files.heroImage) {
+    const headerImageFile = req.files?.find(
+      (file) => file.fieldname === "headerImage"
+    );
+    const heroImageFile = req.files?.find(
+      (file) => file.fieldname === "heroImage"
+    );
+
+    // Check if both image files are provided
+    if (!headerImageFile || !heroImageFile) {
       return res.status(400).json({
         message: "Both header image and hero image are required",
         required: ["headerImage", "heroImage"],
       });
     }
-
-    const headerImageFile = req.files.headerImage[0];
-    const heroImageFile = req.files.heroImage[0];
 
     const headerImageResponse = await imagekit.upload({
       file: headerImageFile.buffer,
@@ -232,8 +234,14 @@ export const getAllBlogs = async (req, res) => {
 
     // Get blogs with pagination and populate images
     const blogs = await Blog.find(filter)
-      .populate("headerImage")
-      .populate("heroImage")
+      .populate({
+        path: "headerImage",
+        select: "name url fileId",
+      })
+      .populate({
+        path: "heroImage",
+        select: "name url fileId",
+      })
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
@@ -271,8 +279,14 @@ export const getBlogById = async (req, res) => {
     const { id } = req.params;
 
     const blog = await Blog.findById(id)
-      .populate("headerImage")
-      .populate("heroImage");
+      .populate({
+        path: "headerImage",
+        select: "name url fileId",
+      })
+      .populate({
+        path: "heroImage",
+        select: "name url fileId",
+      });
 
     if (!blog) {
       return res.status(404).json({
@@ -467,8 +481,14 @@ export const updateBlog = async (req, res) => {
       new: true,
       runValidators: true,
     })
-      .populate("headerImage")
-      .populate("heroImage");
+      .populate({
+        path: "headerImage",
+        select: "name url fileId",
+      })
+      .populate({
+        path: "heroImage",
+        select: "name url fileId",
+      });
 
     res.status(200).json({
       success: true,

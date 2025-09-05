@@ -1,5 +1,6 @@
 import Trip from "../model/trip.model.js";
 import Image from "../model/image.model.js";
+import { Booking } from "../model/booking.model.js";
 import ImageKit from "imagekit";
 import multer from "multer";
 import dotenv from "dotenv";
@@ -24,10 +25,7 @@ export const upload = multer({
 // Configure multer for multiple image uploads
 export const uploadMultiple = multer({
   storage: multer.memoryStorage(),
-}).fields([
-  { name: "headerImage", maxCount: 1 },
-  { name: "heroImage", maxCount: 1 },
-]);
+}).any();
 
 export const addTrip = async (req, res) => {
   try {
@@ -143,16 +141,21 @@ export const addTrip = async (req, res) => {
       }
     }
 
+    // Extract image files from req.files array
+    const headerImageFile = req.files?.find(
+      (file) => file.fieldname === "headerImage"
+    );
+    const heroImageFile = req.files?.find(
+      (file) => file.fieldname === "heroImage"
+    );
+
     // Check if both image files are provided
-    if (!req.files || !req.files.headerImage || !req.files.heroImage) {
+    if (!headerImageFile || !heroImageFile) {
       return res.status(400).json({
         message: "Both header image and hero image are required",
         required: ["headerImage", "heroImage"],
       });
     }
-
-    const headerImageFile = req.files.headerImage[0];
-    const heroImageFile = req.files.heroImage[0];
 
     // Upload header image to ImageKit
     const headerImageResponse = await imagekit.upload({
@@ -266,8 +269,8 @@ export const getAllTrips = async (req, res) => {
     // Get trips with pagination
     const trips = await Trip.find(filter)
       .populate("bookings")
-      .populate("headerImage")
-      .populate("heroImage")
+      .populate("headerImage", "name url fileId")
+      .populate("heroImage", "name url fileId")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
@@ -305,8 +308,8 @@ export const getTripById = async (req, res) => {
 
     const trip = await Trip.findById(id)
       .populate("bookings")
-      .populate("headerImage")
-      .populate("heroImage");
+      .populate("headerImage", "name url fileId")
+      .populate("heroImage", "name url fileId");
 
     if (!trip) {
       return res.status(404).json({
@@ -462,19 +465,28 @@ export const updateTrip = async (req, res) => {
 
     // Handle image updates if new files are provided
     if (req.files) {
+      // Extract image files from req.files array
+      const headerImageFile = req.files.find(
+        (file) => file.fieldname === "headerImage"
+      );
+      const heroImageFile = req.files.find(
+        (file) => file.fieldname === "heroImage"
+      );
+
       try {
         // Handle header image update
-        if (req.files.headerImage && req.files.headerImage[0]) {
+        if (headerImageFile) {
           // Delete old header image if exists
           if (existingTrip.headerImage) {
-            const oldHeaderImage = await Image.findById(existingTrip.headerImage);
+            const oldHeaderImage = await Image.findById(
+              existingTrip.headerImage
+            );
             if (oldHeaderImage) {
               await imagekit.deleteFile(oldHeaderImage.fileId);
               await Image.findByIdAndDelete(existingTrip.headerImage);
             }
           }
 
-          const headerImageFile = req.files.headerImage[0];
           const headerImageResponse = await imagekit.upload({
             file: headerImageFile.buffer,
             fileName: `trip_header_${Date.now()}_${
@@ -495,7 +507,7 @@ export const updateTrip = async (req, res) => {
         }
 
         // Handle hero image update
-        if (req.files.heroImage && req.files.heroImage[0]) {
+        if (heroImageFile) {
           // Delete old hero image if exists
           if (existingTrip.heroImage) {
             const oldHeroImage = await Image.findById(existingTrip.heroImage);
@@ -505,7 +517,6 @@ export const updateTrip = async (req, res) => {
             }
           }
 
-          const heroImageFile = req.files.heroImage[0];
           const heroImageResponse = await imagekit.upload({
             file: heroImageFile.buffer,
             fileName: `trip_hero_${Date.now()}_${heroImageFile.originalname}`,
@@ -536,8 +547,8 @@ export const updateTrip = async (req, res) => {
       runValidators: true,
     })
       .populate("bookings")
-      .populate("headerImage")
-      .populate("heroImage");
+      .populate("headerImage", "name url fileId")
+      .populate("heroImage", "name url fileId");
 
     res.status(200).json({
       success: true,
