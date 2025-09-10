@@ -9,6 +9,7 @@ import {
   sendResetSuccessEmail,
 } from "../mailtrap/emails.js";
 import { log } from "node:console";
+import passport from "../config/passport.js";
 
 export const signup = async (req, res) => {
   const { email, password, name } = req.body;
@@ -222,5 +223,58 @@ export const logout = async (req, res) => {
   } catch (error) {
     console.log("Error in logout ", error);
     res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+// Google OAuth Controllers
+export const googleAuth = passport.authenticate("google", {
+  scope: ["profile", "email"],
+});
+
+export const googleCallback = (req, res, next) => {
+  passport.authenticate("google", { session: false }, (err, user, info) => {
+    if (err) {
+      console.error("Google OAuth error:", err);
+      return res.redirect(`${process.env.CLIENT_URL}/login?error=oauth_error`);
+    }
+
+    if (!user) {
+      console.error("Google OAuth failed: No user returned");
+      return res.redirect(`${process.env.CLIENT_URL}/login?error=oauth_failed`);
+    }
+
+    try {
+      // Generate JWT token and set cookie
+      generateTokenAndSetCookie(res, user._id);
+
+      // Redirect to frontend with success
+      res.redirect(`${process.env.CLIENT_URL}/congrats?login=success`);
+    } catch (error) {
+      console.error("Error setting auth cookie:", error);
+      res.redirect(`${process.env.CLIENT_URL}/login?error=auth_error`);
+    }
+  })(req, res, next);
+};
+
+// Check authentication status
+export const checkAuth = async (req, res) => {
+  try {
+    const user = await User.findById(req.userId).select("-password");
+    if (!user) {
+      return res
+        .status(400)
+        .json({ success: false, message: "User not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      user: {
+        ...user._doc,
+        password: undefined,
+      },
+    });
+  } catch (error) {
+    console.log("Error in checkAuth ", error);
+    res.status(400).json({ success: false, message: error.message });
   }
 };
